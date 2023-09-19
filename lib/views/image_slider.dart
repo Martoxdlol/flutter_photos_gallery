@@ -8,16 +8,28 @@ class ImageSlider extends StatefulWidget {
     super.key,
     required this.images,
     required this.initialIndex,
+    this.onImageChanged,
   });
 
   final List<ImageData> images;
   final int initialIndex;
+  final void Function(int)? onImageChanged;
 
   @override
   State<ImageSlider> createState() => _ImageSliderState();
 }
 
 class _ImageSliderState extends State<ImageSlider> {
+  int currentIndex = 0;
+
+  final controller = CarouselController();
+
+  @override
+  void initState() {
+    currentIndex = widget.initialIndex;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -25,12 +37,19 @@ class _ImageSliderState extends State<ImageSlider> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: CarouselSlider.builder(
+        carouselController: controller,
         options: CarouselOptions(
           enlargeStrategy: CenterPageEnlargeStrategy.height,
           initialPage: widget.initialIndex,
           aspectRatio: size.width / size.height,
           height: size.height,
           viewportFraction: 1,
+          onPageChanged: (value, reason) {
+            setState(() {
+              currentIndex = value;
+            });
+            widget.onImageChanged?.call(value);
+          },
         ),
         itemCount: widget.images.length,
         itemBuilder: (context, index, realIndex) {
@@ -45,12 +64,14 @@ void showImageSlider(
   BuildContext context, {
   required List<ImageData> images,
   required int initialIndex,
+  void Function(int)? onImageChanged,
 }) {
   Navigator.of(context).push(
     ImageSliderPageRoute(
       builder: (context) => ImageSlider(
         images: images,
         initialIndex: initialIndex,
+        onImageChanged: onImageChanged,
       ),
     ),
   );
@@ -84,7 +105,9 @@ class ImageSliderPageRoute extends PageRoute {
         Positioned.fill(
           child: GestureDetector(
             onTap: () => Navigator.of(context).pop(),
-            child: Container(color: Colors.black.withOpacity(animation.value)),
+            child: Container(
+              color: Colors.black.withOpacity(animation.value),
+            ),
           ),
         ),
         Positioned.fill(

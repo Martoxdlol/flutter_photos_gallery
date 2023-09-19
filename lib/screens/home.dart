@@ -14,6 +14,8 @@ class GalleryHome extends StatefulWidget {
 class _GalleryHomeState extends State<GalleryHome> {
   List<ImageData> images = [];
 
+  final controller = ScrollController();
+
   void addImage(ImageData image) {
     setState(() {
       images.add(image);
@@ -29,9 +31,24 @@ class _GalleryHomeState extends State<GalleryHome> {
     super.initState();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  void setCurrentImageIndex(int index) {
+    final (itemWidth, itemsPerRow, width, height, rowsQuantity) = dimensions;
+
+    final rowIndex = (index / itemsPerRow).floor();
+
+    controller.jumpTo(rowIndex * itemWidth - height / 2);
+  }
+
+  (
+    double itemWidth,
+    int itemsPerRow,
+    double width,
+    double height,
+    int rowsQuantity
+  ) get dimensions {
     final width = MediaQuery.of(context).size.width;
+
+    final height = MediaQuery.of(context).size.height;
 
     final itemsPerRow = (width / 200).floor();
 
@@ -39,8 +56,16 @@ class _GalleryHomeState extends State<GalleryHome> {
 
     final rowsQuantity = (images.length / itemsPerRow).ceil();
 
+    return (itemWidth, itemsPerRow, width, height, rowsQuantity);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final (itemWidth, itemsPerRow, _, _, rowsQuantity) = dimensions;
+
     return Scaffold(
       body: ListView.builder(
+        controller: controller,
         itemCount: rowsQuantity,
         itemExtent: itemWidth,
         itemBuilder: (context, index) {
@@ -57,6 +82,7 @@ class _GalleryHomeState extends State<GalleryHome> {
                         context,
                         images: images,
                         initialIndex: index * itemsPerRow + i,
+                        onImageChanged: setCurrentImageIndex,
                       );
                     },
                   )
